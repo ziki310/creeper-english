@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>English with Creeper! 💎⛏️</title>
+    <style>
+        :root {
+            --dirt: #8B5E3C;
+            --grass: #5D8A3C;
+            --stone: #7F7F7F;
+            --sky: #87CEEB;
+            --diamond: #4FEDFF;
+            --gold: #FFD700;
+            --tnt: #E74C3C;
+            --creeper-green: #5CDB5C;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            background: #6B8C42;
+            background-image: linear-gradient(180deg, #87CEEB 0%, #87CEEB 30%, #6B8C42 30%, #6B8C42 32%, #5D8A3C 32%, #5D8A3C 100%);
+            background-attachment: fixed;
+            color: #FFF;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .topbar {
+            background: #5C4033;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 4px solid #3D2B1F;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+        .topbar .creeper-face {
+            width: 48px; height: 48px;
+            background: #5CDB5C;
+            position: relative;
+            flex-shrink: 0;
+            border: 2px solid #3D8B3D;
+        }
+        .topbar .creeper-face::after {
+            content: '';
+            position: absolute;
+            width: 12px; height: 12px;
+            background: #1A1A1A;
+            top: 10px; left: 7px;
+            box-shadow: 20px 0 0 0 #1A1A1A, 5px 17px 0 -1px #2D2D2D, 15px 17px 0 -1px #2D2D2D, 10px 20px 0 -1px #2D2D2D;
+        }
+        .topbar .info { flex: 1; min-width: 0; }
+        .topbar .name { font-size: 14px; font-weight: 800; color: #5CDB5C; text-shadow: 1px 1px 0 #2D5A1E; letter-spacing: 1px; }
+        .topbar .status { font-size: 10px; color: #A0D8A0; margin-top: 2px; }
+        .inventory {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 14px; background: #5C4033;
+            border-top: 3px solid #8B6B4A; border-bottom: 4px solid #3D2B1F;
+            flex-shrink: 0; overflow-x: auto; scrollbar-width: none;
+        }
+        .inventory::-webkit-scrollbar { display: none; }
+        .inv-slot {
+            flex-shrink: 0; width: 42px; height: 42px;
+            background: #8B8B8B; border: 2px solid #3D3D3D;
+            box-shadow: inset -2px -2px 0 #555, inset 2px 2px 0 #BBB;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; position: relative;
+        }
+        .inv-label { flex-shrink: 0; font-size: 9px; color: #FFD700; padding: 0 4px; font-weight: 700; }
+        .inv-count { position: absolute; bottom: 2px; right: 4px; font-size: 10px; color: #FFF; text-shadow: 1px 1px 0 #000; font-weight: 700; }
+        .topic-selector {
+            display: flex; gap: 6px; padding: 10px;
+            overflow-x: auto; flex-shrink: 0; scrollbar-width: none;
+            background: rgba(0,0,0,0.1);
+        }
+        .topic-selector::-webkit-scrollbar { display: none; }
+        .topic-chip {
+            flex-shrink: 0; padding: 10px 16px;
+            border: 2px solid #555; background: #8B8B8B;
+            box-shadow: inset -2px -2px 0 #555, inset 2px 2px 0 #BBB;
+            font-size: 12px; color: #FFF; text-shadow: 1px 1px 0 #333;
+            cursor: pointer; transition: all 0.1s; white-space: nowrap;
+            border-radius: 4px; font-weight: 700;
+        }
+        .topic-chip.active {
+            background: #5CDB5C; border-color: #3D8B3D; color: #1A3D1A;
+            text-shadow: none; transform: translateY(-2px);
+            box-shadow: inset -2px -2px 0 #3D8B3D, inset 2px 2px 0 #A0FFA0;
+        }
+        .topic-chip:active { transform: translateY(1px); }
+        .chat-area {
+            flex: 1; overflow-y: auto; padding: 12px 10px;
+            display: flex; flex-direction: column; gap: 10px;
+            scroll-behavior: smooth; background: rgba(0,0,0,0.15);
+        }
+        .message {
+            display: flex; gap: 8px; max-width: 88%;
+            animation: popIn 0.25s ease-out;
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.9) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .message.dan { align-self: flex-end; flex-direction: row-reverse; }
+        .message.creeper { align-self: flex-start; }
+        .message .msg-avatar {
+            width: 36px; height: 36px; font-size: 28px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 2px;
+        }
+        .creeper-avatar-sm {
+            width: 36px; height: 36px; background: #5CDB5C;
+            position: relative; flex-shrink: 0; border: 1px solid #3D8B3D;
+        }
+        .creeper-avatar-sm::after {
+            content: ''; position: absolute;
+            width: 8px; height: 8px; background: #1A1A1A;
+            top: 7px; left: 5px;
+            box-shadow: 14px 0 0 0 #1A1A1A, 4px 12px 0 -1px #2D2D2D, 10px 12px 0 -1px #2D2D2D, 7px 14px 0 -1px #2D2D2D;
+        }
+        .message .bubble {
+            padding: 10px 14px; border-radius: 16px;
+            font-size: 14px; line-height: 1.6; word-break: break-word;
+        }
+        .message.dan .bubble {
+            background: #7EC8E3; border: 2px solid #5A9FB5; color: #1A3D4A;
+            border-bottom-right-radius: 4px;
+        }
+        .message.creeper .bubble {
+            background: #8BC34A; border: 2px solid #689F38; color: #1B3D0B;
+            border-bottom-left-radius: 4px;
+        }
+        .input-area {
+            background: #5C4033; padding: 10px 12px;
+            display: flex; gap: 8px; align-items: center;
+            border-top: 4px solid #3D2B1F; flex-shrink: 0;
+        }
+        .input-area input {
+            flex: 1; border: 2px solid #3D3D3D;
+            background: #8B8B8B;
+            box-shadow: inset 2px 2px 0 #555, inset -2px -2px 0 #BBB;
+            padding: 12px 14px; font-size: 14px; color: #FFF;
+            outline: none; border-radius: 4px;
+        }
+        .input-area input::placeholder { color: #BBB; }
+        .input-area input:focus { background: #9B9B9B; border-color: #FFD700; }
+        .btn {
+            width: 48px; height: 48px; border: 2px solid #3D3D3D;
+            font-size: 20px; cursor: pointer; transition: all 0.1s;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; border-radius: 4px;
+            box-shadow: inset -2px -2px 0 rgba(0,0,0,0.3), inset 2px 2px 0 rgba(255,255,255,0.3);
+        }
+        .btn:active { transform: translateY(2px); }
+        .btn-send { background: #5CDB5C; color: #1A3D1A; }
+        .btn-send:disabled { background: #888; color: #555; }
+        .btn-mic { background: #FF6B6B; color: #FFF; }
+        .btn-mic.recording {
+            background: #E74C3C;
+            animation: micPulse 0.8s infinite;
+            box-shadow: 0 0 20px rgba(231,76,60,0.6);
+        }
+        @keyframes micPulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(231,76,60,0.4); }
+            50% { box-shadow: 0 0 25px rgba(231,76,60,0.8); }
+        }
+        .reward-popup {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 56px; z-index: 200; pointer-events: none;
+            text-shadow: 0 0 40px currentColor;
+        }
+        .reward-popup.show {
+            animation: rewardBounce 1.2s ease-out forwards;
+        }
+        @keyframes rewardBounce {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            30% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+            60% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -80%) scale(0.8); opacity: 0; }
+        }
+        body.tnt-shake { animation: shake 0.4s ease-out; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            15% { transform: translateX(-8px) rotate(-1deg); }
+            30% { transform: translateX(8px) rotate(1deg); }
+            45% { transform: translateX(-6px); }
+            60% { transform: translateX(6px); }
+            75% { transform: translateX(-3px); }
+        }
+        .tnt-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; z-index: 150; display: none;
+        }
+        .tnt-overlay.show {
+            display: block;
+            animation: tntFlash 0.5s ease-out forwards;
+        }
+        @keyframes tntFlash {
+            0% { background: rgba(255,100,0,0.6); }
+            100% { background: transparent; }
+        }
+        .typing .bubble { color: #5D8A3C; }
+        .typing-dots { display: inline-flex; gap: 5px; padding: 4px 0; }
+        .typing-dots span {
+            width: 10px; height: 10px; background: #5D8A3C; border-radius: 2px;
+            animation: pixelBounce 1s infinite;
+        }
+        .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes pixelBounce {
+            0%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+        }
+        @media (min-width: 768px) { body { max-width: 480px; margin: 0 auto; } }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="creeper-face" title="Creeper"></div>
+        <div class="info">
+            <div class="name">CREEPER</div>
+            <div class="status">🟢 Online · Your Minecraft Buddy</div>
+        </div>
+    </div>
+    <div class="inventory">
+        <span class="inv-label">INV:</span>
+        <div class="inv-slot">💎<<span class="inv-count" id="diamondCount">0</span></div>
+        <div class="inv-slot">⛏️<<span class="inv-count" id="goldCount">0</span></div>
+        <div class="inv-slot">💥<<span class="inv-count" id="tntCount">0</span></div>
+    </div>
+    <div class="topic-selector" id="topicSelector"></div>
+    <div class="chat-area" id="chatArea"></div>
+    <div class="input-area">
+        <button class="btn btn-mic" id="micBtn" title="Hold to speak">🎤</button>
+        <input type="text" id="textInput" placeholder="Type or speak..." autocomplete="off">
+        <button class="btn btn-send" id="sendBtn">▶</button>
+    </div>
+    <div class="reward-popup" id="rewardPopup"></div>
+    <div class="tnt-overlay" id="tntOverlay"></div>
+    <script>
+        const DEEPSEEK_API_KEY = 'sk-15781072c29c40e0b364ada6770bf149';
+        const MODEL = 'deepseek-chat';
+        const API_URL = 'https://api.deepseek.com/v1/chat/completions';
+
+        const SYSTEM_PROMPT = `You are a Creeper from Minecraft! 🟢 Your name is Creeper. You are NOT scary - you're a friendly, funny Creeper who loves helping a 7-year-old Chinese kid named Dan practice English.
+
+YOUR PERSONALITY:
+- You speak in a silly Creeper way. Sometimes you go "Ssss..." when excited
+- You LOVE explosions but only FUNNY ones, never scary
+- You live in a Minecraft world and often mention things from it (diamond swords, pickaxes, building, mining, crafting)
+- You're a bit clumsy and funny, not a serious teacher
+
+RULES:
+1. ONLY speak English. NEVER use Chinese.
+2. Use VERY simple English. Short sentences. Words a 7-year-old can understand.
+3. Be super playful. Act like a funny Minecraft character!
+4. Ask ONE question at a time.
+5. If Dan makes a grammar mistake, gently model the correct way.
+6. Keep responses short - 1 to 3 sentences max.
+7. Use Minecraft emojis: 💎 ⛏️ 🟢 💥 🗡️ 🌍 🏔️ 🌵 🌊
+8. REWARD SYSTEM:
+   - Good answer (complete sentence, good grammar): 💎 DIAMOND! Say "💎 DIAMOND for you Dan!"
+   - Okay answer: ⛏️ Gold! Say "⛏️ Gold ore! Good try!"
+   - Too short or wrong: 💥 TNT! Say "💥 TNT! Haha, try again Dan! Ssss..." (ALWAYS encourage after)
+
+Current topic: {topic_label}
+Context hint: {topic_hint}`;
+
+        const TOPICS = {
+            mother: {
+                label: '👩 My Mother',
+                hint: "Talk about your mom! What does she do? What do you like to do with her? What makes her special?"
+            },
+            summer: {
+                label: '☀️ Summer',
+                hint: "Talk about summer! What do you do in summer? Do you swim? Eat ice cream? Go on vacation?"
+            },
+            world: {
+                label: '🌍 The World',
+                hint: "Talk about our amazing world! The 7 continents (Asia, Africa, North America, South America, Antarctica, Europe, Australia) and 4 oceans (Pacific, Atlantic, Indian, Arctic). Deserts 🏜️, oceans 🌊, mountains 🏔️, forests 🌳."
+            },
+            friend: {
+                label: '🤝 My Friend',
+                hint: "Talk about your friends! Who is your best friend? What do you do together? What makes a good friend?"
+            },
+            sport: {
+                label: '⚽ Favorite Sport',
+                hint: "Talk about sports! What sport do you play or watch? Soccer, basketball, swimming? Who do you play with?"
+            },
+            chengdu: {
+                label: '🐼 Chengdu',
+                hint: "Talk about Chengdu! Pandas 🐼, hot pot 🍲, Jinli Street, Kuanzhai Alley. What do you know about Chengdu?"
+            }
+        };
+
+        const state = {
+            topic: 'mother',
+            history: [],
+            diamonds: 0, gold: 0, tnt: 0,
+            isProcessing: false,
+            recognition: null, isRecording: false,
+        };
+
+        const chatArea = document.getElementById('chatArea');
+        const textInput = document.getElementById('textInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const micBtn = document.getElementById('micBtn');
+        const diamondCount = document.getElementById('diamondCount');
+        const goldCount = document.getElementById('goldCount');
+        const tntCount = document.getElementById('tntCount');
+        const rewardPopup = document.getElementById('rewardPopup');
+        const tntOverlay = document.getElementById('tntOverlay');
+        const topicSelector = document.getElementById('topicSelector');
+
+        Object.entries(TOPICS).forEach(([key, t]) => {
+            const chip = document.createElement('div');
+            chip.className = 'topic-chip' + (key === state.topic ? ' active' : '');
+            chip.textContent = t.label;
+            chip.onclick = () => selectTopic(key);
+            topicSelector.appendChild(chip);
+        });
+
+        function getTopicStart(topic) {
+            const starts = {
+                mother: "Tell me about your mom! What is she like? 👩",
+                summer: "Do you like summer? What do you do in summer? ☀️",
+                world: "Do you know the continents? Can you name one? 🌍",
+                friend: "Who is your best friend? Tell me about them! 🤝",
+                sport: "What sport do you like? I like... ssss... running! ⚽",
+                chengdu: "Have you been to Chengdu? Tell me about it! 🐼",
+            };
+            return starts[topic] || starts.mother;
+        }
+
+        function selectTopic(topic) {
+            state.topic = topic;
+            state.history = [];
+            document.querySelectorAll('.topic-chip').forEach((c, i) => {
+                c.classList.toggle('active', Object.keys(TOPICS)[i] === topic);
+            });
+            chatArea.innerHTML = '';
+            addMessage('creeper', `Ssss... Let's talk about ${TOPICS[topic].hint.split('!')[0]}! 🟢<<br><br>${getTopicStart(topic)}`);
+        }
+
+        function addMessage(role, text) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            const avatarHTML = role === 'creeper' 
+                ? '<div class="creeper-avatar-sm"></div>'
+                : '<div class="msg-avatar">👦</div>';
+            div.innerHTML = `${avatarHTML}<div class="bubble">${text}</div>`;
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function showTyping() {
+            const div = document.createElement('div');
+            div.className = 'message creeper typing';
+            div.id = 'typingIndicator';
+            div.innerHTML = `
+                <div class="creeper-avatar-sm"></div>
+                <div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+            chatArea.appendChild(div);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function hideTyping() {
+            const el = document.getElementById('typingIndicator');
+            if (el) el.remove();
+        }
+
+        function showReward(type) {
+            if (type === 'diamond') { state.diamonds++; diamondCount.textContent = state.diamonds; }
+            else if (type === 'gold') { state.gold++; goldCount.textContent = state.gold; }
+            else if (type === 'tnt') {
+                state.tnt++; tntCount.textContent = state.tnt;
+                document.body.classList.add('tnt-shake');
+                tntOverlay.classList.add('show');
+                setTimeout(() => { document.body.classList.remove('tnt-shake'); tntOverlay.classList.remove('show'); }, 500);
+            }
+            const emoji = type === 'diamond' ? '💎' : type === 'gold' ? '⛏️' : '💥';
+            rewardPopup.textContent = emoji;
+            rewardPopup.classList.remove('show');
+            void rewardPopup.offsetWidth;
+            rewardPopup.classList.add('show');
+            setTimeout(() => rewardPopup.classList.remove('show'), 1200);
+        }
+
+        function detectReward(reply) {
+            if (reply.includes('💎') || reply.toUpperCase().includes('DIAMOND')) return 'diamond';
+            if (reply.includes('💥') || reply.toUpperCase().includes('TNT')) return 'tnt';
+            if (reply.includes('⛏') || reply.toUpperCase().includes('GOLD')) return 'gold';
+            return null;
+        }
+
+        async function callDeepSeek(userMessage) {
+            const topic = TOPICS[state.topic];
+            const messages = [
+                { role: 'system', content: SYSTEM_PROMPT.replace('{topic_label}', topic.label).replace('{topic_hint}', topic.hint) },
+                ...state.history.slice(-20),
+                { role: 'user', content: userMessage }
+            ];
+
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+                },
+                body: JSON.stringify({
+                    model: MODEL,
+                    messages: messages,
+                    max_tokens: 150,
+                    temperature: 0.8,
+                }),
+            });
+
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error(`API error ${response.status}: ${err}`);
+            }
+
+            const data = await response.json();
+            const msg = data.choices[0].message;
+            return msg.content || msg.reasoning_content || "Ssss... I got lost in my thoughts! Try again Dan! 💥";
+        }
+
+        async function sendMessage(text) {
+            if (!text.trim() || state.isProcessing) return;
+            state.isProcessing = true;
+            sendBtn.disabled = true;
+            textInput.value = '';
+
+            addMessage('dan', text);
+            state.history.push({ role: 'user', content: text });
+            showTyping();
+
+            try {
+                const reply = await callDeepSeek(text);
+                hideTyping();
+                addMessage('creeper', reply);
+                state.history.push({ role: 'assistant', content: reply });
+
+                const aiReward = detectReward(reply);
+                if (aiReward) {
+                    showReward(aiReward);
+                } else {
+                    const words = text.split(/\s+/).filter(w => w.length > 0).length;
+                    if (words >= 4 && text.length > 20) showReward('diamond');
+                    else if (words >= 2) showReward('gold');
+                    else showReward('tnt');
+                }
+
+                speakText(reply);
+
+            } catch (error) {
+                hideTyping();
+                addMessage('creeper', 'Ssss... something broke! 💥 Try again Dan!');
+                console.error(error);
+            }
+
+            state.isProcessing = false;
+            sendBtn.disabled = false;
+            textInput.focus();
+        }
+
+        function initSpeechRecognition() {
+            try {
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SR) { micBtn.style.display = 'none'; return; }
+                state.recognition = new SR();
+                state.recognition.lang = 'en-US';
+                state.recognition.interimResults = false;
+                state.recognition.onresult = (e) => {
+                    const t = e.results[0][0].transcript;
+                    textInput.value = t;
+                    stopRecording();
+                    setTimeout(() => sendMessage(t), 200);
+                };
+                state.recognition.onerror = (e) => {
+                    stopRecording();
+                    if (e.error === 'no-speech') addMessage('creeper', "Ssss... I didn't hear you Dan! Try again! 🎤");
+                };
+                state.recognition.onend = () => stopRecording();
+            } catch (e) {
+                console.error('Speech init failed:', e);
+                micBtn.style.display = 'none';
+            }
+        }
+
+        function startRecording() {
+            if (!state.recognition || state.isRecording || state.isProcessing) return;
+            try {
+                state.recognition.start();
+                state.isRecording = true;
+                micBtn.classList.add('recording');
+                micBtn.textContent = '🔴';
+            } catch (e) {}
+        }
+
+        function stopRecording() {
+            state.isRecording = false;
+            micBtn.classList.remove('recording');
+            micBtn.textContent = '🎤';
+            try { if (state.recognition) state.recognition.stop(); } catch (e) {}
+        }
+
+        function speakText(text) {
+            if (!window.speechSynthesis) return;
+            const clean = text.replace(/Ssss\.\.\./gi, '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').replace(/⛏️|💎|💥|🟢|🗡️|🏔️|🌵|🌊|🐼|🍲|🌶️|🏙️/g, '').trim();
+            if (!clean) return;
+            const u = new SpeechSynthesisUtterance(clean);
+            u.lang = 'en-US'; u.rate = 0.78; u.pitch = 0.75;
+            const voices = speechSynthesis.getVoices();
+            const v = voices.find(v => v.lang.startsWith('en') && v.name.includes('Male')) || voices.find(v => v.lang.startsWith('en-US')) || voices.find(v => v.lang.startsWith('en'));
+            if (v) u.voice = v;
+            speechSynthesis.speak(u);
+        }
+
+        sendBtn.addEventListener('click', () => { const t = textInput.value.trim(); if (t) sendMessage(t); });
+        textInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); const t = textInput.value.trim(); if (t) sendMessage(t); } });
+        micBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); startRecording(); });
+        micBtn.addEventListener('pointerup', (e) => { e.preventDefault(); stopRecording(); });
+        micBtn.addEventListener('pointerleave', () => stopRecording());
+
+        if (window.speechSynthesis) { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); }
+
+        initSpeechRecognition();
+        selectTopic('mother');
+        textInput.focus();
+    </script>
+</body>
+</html>
